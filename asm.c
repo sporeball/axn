@@ -3,6 +3,19 @@
 int line = 1;
 int col = 1;
 
+static int s_eq(char *a, char *b) {
+  int i = 0;
+  while (1) {
+    if (a[i] != b[i]) {
+      return 0;
+    }
+    if (a[i] == '\0') {
+      return 1;
+    }
+    i++;
+  }
+}
+
 static char peekc(FILE *f) {
   char next = fgetc(f);
   ungetc(next, f);
@@ -18,14 +31,27 @@ static int is_nl(char ch) {
 }
 
 static char* maketoken(FILE *f) {
-  int len = 0;
   char token[64] = "";
-  while (1) {
-    token[len] = fgetc(f);
-    len++;
-    char next = peekc(f);
-    if (is_ws(next) || is_nl(next)) {
-      break;
+  char ch = fgetc(f);
+  if (is_nl(ch)) {
+    token[0] = '\n';
+    line++;
+    col = 1;
+  } else if (is_ws(ch)) {
+    token[0] = ' ';
+    while (is_ws(peekc(f))) {
+      fgetc(f);
+    }
+  } else {
+    int len = 0;
+    ungetc(ch, f);
+    while (1) {
+      char next = peekc(f);
+      if (is_nl(next) || is_ws(next)) {
+        break;
+      }
+      token[len] = fgetc(f);
+      len++;
     }
   }
   printf("%s\n", token);
@@ -41,16 +67,7 @@ int main(int argc, char *argv[]) {
       break;
     }
     if (ch == '\r') {
-      continue;
-    } else if (ch == '\n') {
       fgetc(src);
-      line++;
-      col = 1;
-      continue;
-    } else if (is_ws(ch)) {
-      while (is_ws(peekc(src))) {
-        fgetc(src);
-      }
       continue;
     } else {
       maketoken(src);
