@@ -30,7 +30,11 @@ static int is_nl(char ch) {
   return (ch == '\n');
 }
 
-static char* maketoken(FILE *f) {
+static int is_comma(char ch) {
+  return (ch == ',');
+}
+
+static char *maketoken(FILE *f) {
   char token[64] = "";
   char ch = fgetc(f);
   if (is_nl(ch)) {
@@ -42,12 +46,14 @@ static char* maketoken(FILE *f) {
     while (is_ws(peekc(f))) {
       fgetc(f);
     }
+  } else if (is_comma(ch)) {
+    token[0] = ',';
   } else {
     int len = 0;
     ungetc(ch, f);
     while (1) {
       char next = peekc(f);
-      if (is_nl(next) || is_ws(next)) {
+      if (is_nl(next) || is_ws(next) || is_comma(next)) {
         break;
       }
       token[len] = fgetc(f);
