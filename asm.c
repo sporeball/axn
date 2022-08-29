@@ -37,20 +37,29 @@ static int is_comma(char ch) {
 static char *maketoken(FILE *f) {
   char token[64] = "";
   char ch = fgetc(f);
+  // newline
   if (is_nl(ch)) {
     token[0] = '\n';
     line++;
     col = 1;
-  } else if (is_ws(ch)) {
+  }
+  // whitespace
+  else if (is_ws(ch)) {
     token[0] = ' ';
+    // greedy
     while (is_ws(peekc(f))) {
       fgetc(f);
     }
-  } else if (is_comma(ch)) {
+  }
+  // comma
+  else if (is_comma(ch)) {
     token[0] = ',';
-  } else {
+  }
+  // default
+  else {
     int len = 0;
     ungetc(ch, f);
+    // greedy
     while (1) {
       char next = peekc(f);
       if (is_nl(next) || is_ws(next) || is_comma(next)) {
@@ -60,7 +69,7 @@ static char *maketoken(FILE *f) {
       len++;
     }
   }
-  printf("%s\n", token);
+  printf("%s\n", token); // debug
   return token;
 }
 
@@ -72,10 +81,13 @@ int main(int argc, char *argv[]) {
     if (feof(src)) {
       break;
     }
+    // don't care
     if (ch == '\r') {
       fgetc(src);
       continue;
-    } else {
+    }
+    // token
+    else {
       maketoken(src);
     }
   }
