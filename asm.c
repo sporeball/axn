@@ -61,12 +61,12 @@ static char *maketoken(FILE *f) {
     ungetc(ch, f);
     // greedy
     while (1) {
+      token[len] = fgetc(f);
+      len++;
       char next = peekc(f);
       if (is_nl(next) || is_ws(next) || is_comma(next)) {
         break;
       }
-      token[len] = fgetc(f);
-      len++;
     }
   }
   printf("%s\n", token); // debug
