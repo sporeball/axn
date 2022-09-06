@@ -75,6 +75,10 @@ static int maketoken(FILE *f) {
     ungetc(ch, f);
     // greedy
     while (1) {
+      if (len == 64) {
+        error("token", "too long");
+        return 1;
+      }
       current_token[len] = fgetc(f);
       len++;
       char next = peekc(f);
@@ -102,7 +106,10 @@ int main(int argc, char *argv[]) {
     }
     // token
     else {
-      maketoken(src);
+      if (maketoken(src) == 1) {
+        error("assembly", "failed to assemble ROM");
+        return 1;
+      }
     }
   }
   fclose(src);
