@@ -3,6 +3,15 @@
 int line = 1;
 int col = 1;
 
+char current_token[64] = "";
+
+// print error
+static int error(const char *type, const char *msg) {
+  fprintf(stderr, "%s error: %s\n", type, msg);
+  return 0;
+}
+
+// string equal
 static int s_eq(char *a, char *b) {
   int i = 0;
   while (1) {
@@ -16,6 +25,7 @@ static int s_eq(char *a, char *b) {
   }
 }
 
+// peek char
 static char peekc(FILE *f) {
   char next = fgetc(f);
   ungetc(next, f);
@@ -34,18 +44,22 @@ static int is_comma(char ch) {
   return (ch == ',');
 }
 
-static char *maketoken(FILE *f) {
-  char token[64] = "";
+// @returns 0 for success / 1 for failure
+static int maketoken(FILE *f) {
+  // empty
+  for (int i = 0; i < 64; i++) {
+    current_token[i] = '\0';
+  }
   char ch = fgetc(f);
   // newline
   if (is_nl(ch)) {
-    token[0] = '\n';
+    current_token[0] = '\n';
     line++;
     col = 1;
   }
   // whitespace
   else if (is_ws(ch)) {
-    token[0] = ' ';
+    current_token[0] = ' ';
     // greedy
     while (is_ws(peekc(f))) {
       fgetc(f);
@@ -53,7 +67,7 @@ static char *maketoken(FILE *f) {
   }
   // comma
   else if (is_comma(ch)) {
-    token[0] = ',';
+    current_token[0] = ',';
   }
   // default
   else {
@@ -61,7 +75,7 @@ static char *maketoken(FILE *f) {
     ungetc(ch, f);
     // greedy
     while (1) {
-      token[len] = fgetc(f);
+      current_token[len] = fgetc(f);
       len++;
       char next = peekc(f);
       if (is_nl(next) || is_ws(next) || is_comma(next)) {
@@ -69,8 +83,8 @@ static char *maketoken(FILE *f) {
       }
     }
   }
-  printf("%s\n", token); // debug
-  return token;
+  printf("%s\n", current_token); // debug
+  return 0;
 }
 
 int main(int argc, char *argv[]) {
