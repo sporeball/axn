@@ -44,6 +44,14 @@ static int is_comma(char ch) {
   return (ch == ',');
 }
 
+static int is_digit(char ch) {
+  return (ch >= '0' && ch <= '9');
+}
+
+static int is_letter(char ch) {
+  return (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z');
+}
+
 // @returns 0 for success / 1 for failure
 static int maketoken(FILE *f) {
   // empty
