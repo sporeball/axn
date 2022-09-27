@@ -3,7 +3,14 @@
 int line = 1;
 int col = 1;
 
-char current_token[64] = "";
+typedef struct {
+  char *type;
+  char value[64];
+  int length;
+} Token;
+
+static const Token empty_token;
+Token current_token;
 
 // print error
 static int error(const char *type, const char *msg) {
@@ -32,6 +39,16 @@ static char peekc(FILE *f) {
   return next;
 }
 
+static int tok_append(char ch) {
+  if (current_token.length == 64) {
+    error("token", "too long");
+    return 1;
+  }
+  current_token.value[current_token.length] = ch;
+  current_token.length++;
+  return 0;
+}
+
 static int is_ws(char ch) {
   return (ch == ' ' || ch == '\t');
 }
@@ -44,6 +61,10 @@ static int is_comma(char ch) {
   return (ch == ',');
 }
 
+static int is_sep(char ch) {
+  return (is_ws(ch) || is_nl(ch) || is_comma(ch));
+}
+
 static int is_digit(char ch) {
   return (ch >= '0' && ch <= '9');
 }
@@ -54,48 +75,43 @@ static int is_letter(char ch) {
 
 // @returns 0 for success / 1 for failure
 static int maketoken(FILE *f) {
-  // empty
-  for (int i = 0; i < 64; i++) {
-    current_token[i] = '\0';
-  }
   char ch = fgetc(f);
+  current_token = empty_token;
+  tok_append(ch);
   // newline
   if (is_nl(ch)) {
-    current_token[0] = '\n';
+    current_token.type = "newline";
     line++;
     col = 1;
   }
   // whitespace
   else if (is_ws(ch)) {
-    current_token[0] = ' ';
-    // greedy
+    current_token.type = "whitespace";
+    // greedy drop
     while (is_ws(peekc(f))) {
       fgetc(f);
     }
   }
   // comma
   else if (is_comma(ch)) {
-    current_token[0] = ',';
+    current_token.type = "comma";
   }
   // default
   else {
-    int len = 0;
-    ungetc(ch, f);
-    // greedy
+    // greedy keep
     while (1) {
-      if (len == 64) {
-        error("token", "too long");
-        return 1;
-      }
-      current_token[len] = fgetc(f);
-      len++;
       char next = peekc(f);
-      if (is_nl(next) || is_ws(next) || is_comma(next)) {
+      if (is_sep(next)) {
         break;
+      }
+      fgetc(f);
+      if (tok_append(next) == 1) {
+        error("token", "could not create token");
+        return 1;
       }
     }
   }
-  printf("%s\n", current_token); // debug
+  printf("%s\n", current_token.value); // debug
   return 0;
 }
 
