@@ -61,8 +61,12 @@ static int is_comma(char ch) {
   return (ch == ',');
 }
 
+static int is_semi(char ch) {
+  return (ch == ';');
+}
+
 static int is_sep(char ch) {
-  return (is_ws(ch) || is_nl(ch) || is_comma(ch));
+  return (is_ws(ch) || is_nl(ch) || is_comma(ch) || is_semi(ch));
 }
 
 static int is_digit(char ch) {
@@ -75,7 +79,16 @@ static int is_letter(char ch) {
 
 // @returns 0 for success / 1 for failure
 static int maketoken(FILE *f) {
-  char ch = fgetc(f);
+  char ch = peekc(f);
+  // comment
+  if (is_semi(ch)) {
+    // greedy drop
+    while (!is_nl(peekc(f))) {
+      fgetc(f);
+    }
+  }
+  // go again
+  ch = fgetc(f);
   current_token = empty_token;
   tok_append(ch);
   // newline
@@ -111,7 +124,7 @@ static int maketoken(FILE *f) {
       }
     }
   }
-  printf("%s\n", current_token.value); // debug
+  printf("%s (%s)\n", current_token.type, current_token.value); // debug
   return 0;
 }
 
